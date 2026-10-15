@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIAGIE — Nómina de Matrícula | DRE Piura</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="hdr-container">
+    <div class="hdr-branding">
+      <div class="hdr-logo">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="48" height="48" rx="12" fill="url(#dre-grad)" />
+          <path d="M14 15H34M14 24H34M14 33H26" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="33" cy="33" r="4.5" fill="#38BDF8" stroke="#FFFFFF" stroke-width="2"/>
+          <defs>
+            <linearGradient id="dre-grad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#0284C7"/>
+              <stop stop-color="#0F172A"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div>
+        <div class="hdr-title">SIAGIE — Nómina de Matrícula</div>
+        <div class="hdr-sub">Extracción automática de datos · Dirección Regional de Educación Piura - Estadistica y SIAGIE</div>
+      </div>
+    </div>
+    <div class="hdr-actions">
+      <div class="hdr-badge">
+        <span class="badge-dot"></span>
+        <span>SIAGIE DRE Piura <span id="hdrYear"></span></span>
+      </div>
+      <button class="btn-theme-toggle" id="themeToggle" onclick="alternarTema()" title="Cambiar entre modo claro y oscuro">
+        <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Card Carga -->
+  <section class="card carga-card">
+    <div class="card-header">
+      <div class="card-title">
+        <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+        </svg>
+        <span>Cargar Nóminas de Matrícula</span>
+      </div>
+      <span class="badge-tag">PDF Oficial</span>
+    </div>
+
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <div class="dz-glow"></div>
+      <div class="dz-icon-wrap">
+        <svg class="dz-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <path d="M12 18v-6m-3 3l3-3 3 3"></path>
+        </svg>
+      </div>
+      <div class="dz-title">Arrastra las Nóminas de Matrícula en PDF aquí</div>
+      <div class="dz-sub">O haz clic para explorar en tu equipo · Procesamiento en lote compatible</div>
+    </div>
+    <input type="file" id="fileInput" accept=".pdf" multiple />
+
+    <div id="fileList" class="file-list"></div>
+
+    <div class="acciones-carga">
+      <button class="btn btn-primary" id="btnProcesar" onclick="procesarPDFs()" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="btn-icon">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <span>Extraer datos</span>
+      </button>
+      <button class="btn btn-outline" onclick="limpiarTodo()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+        <span>Limpiar todo</span>
+      </button>
+    </div>
+
+    <!-- Barra de progreso / Spinner -->
+    <div id="spinner" class="spinner-box">
+      <div class="progress-info">
+        <span id="spinMsg">Procesando documentos PDF…</span>
+        <span id="spinPercent" class="spin-pct">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Card Resultados -->
+  <section class="card resultados-card" id="resultados" style="display: none;">
+    <div class="stats-grid" id="statsBox"></div>
+    <div id="alertas"></div>
+
+    <div class="tabla-toolbar">
+      <div class="card-title">
+        <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+        </svg>
+        <span>Estudiantes Extraídos</span>
+      </div>
+
+      <div class="toolbar-right">
+        <!-- Filtro selector por IE -->
+        <div class="filter-ie-wrap">
+          <select id="filtroIE" onchange="filtrarTabla()" class="select-ie" title="Filtrar por Institución Educativa">
+            <option value="">🏫 Todas las I.E.</option>
+          </select>
+        </div>
+
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="buscador" placeholder="Buscar por DNI, estudiante, I.E. o código…" oninput="filtrarTabla()" />
+          <button id="btnClearSearch" class="btn-clear-search" onclick="limpiarBusqueda()" title="Limpiar búsqueda" style="display:none;">✕</button>
+        </div>
+        <span class="count-pill" id="countLbl">0 registros</span>
+      </div>
+    </div>
+
+    <div class="tabla-wrap">
+      <table id="tablaDatos">
+        <thead>
+          <tr>
+            <th class="col-n">#</th>
+            <th class="col-dni">DNI</th>
+            <th class="col-nombre">Apellidos y Nombres</th>
+            <th class="col-ie">Institución Educativa</th>
+            <th class="col-cod">Cód. Modular</th>
+          </tr>
+        </thead>
+        <tbody id="tablaBody"></tbody>
+      </table>
+    </div>
+
+    <div class="acciones-export">
+      <button class="btn btn-success" onclick="exportarExcel()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="btn-icon">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="8" y1="13" x2="16" y2="13"></line>
+          <line x1="8" y1="17" x2="16" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <span>Exportar Excel (.xlsx)</span>
+      </button>
+
+      <button class="btn btn-csv" onclick="exportarCSV()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="btn-icon">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <path d="M8 13h8M8 17h5"></path>
+        </svg>
+        <span>Exportar CSV (.csv)</span>
+      </button>
+
+      <button class="btn btn-outline" onclick="copiarTodo()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        <span>Copiar Todo</span>
+      </button>
+    </div>
+  </section>
+</main>
+
+<footer class="app-footer">
+  <div class="footer-copy">
+    © <span id="copyYear">2026</span> Ing. Victor M. Dominguez Castillo · Dirección Regional de Educación Piura
+  </div>
+  <div class="footer-sub">
+    Estadística y SIAGIE · Procesamiento seguro y privado ejecutado en su navegador local
+  </div>
+</footer>
+
+<div id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
